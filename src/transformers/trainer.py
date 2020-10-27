@@ -392,9 +392,9 @@ class Trainer:
             return get_tpu_sampler(self.train_dataset)
         else:
             return (
-                RandomSampler(self.train_dataset)
+                SequentialSampler(self.train_dataset)
                 if self.args.local_rank == -1
-                else DistributedSampler(self.train_dataset)
+                else DistributedSampler(self.train_dataset, shuffle=False)
             )
 
     def get_train_dataloader(self) -> DataLoader:

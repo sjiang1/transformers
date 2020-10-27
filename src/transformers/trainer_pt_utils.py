@@ -25,7 +25,7 @@ import numpy as np
 import torch
 from torch.optim.lr_scheduler import SAVE_STATE_WARNING
 from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data.sampler import RandomSampler, Sampler
+from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 
 from .file_utils import is_torch_tpu_available
 from .utils import logging
@@ -181,8 +181,8 @@ class SequentialDistributedSampler(Sampler):
 
 def get_tpu_sampler(dataset: torch.utils.data.dataset.Dataset):
     if xm.xrt_world_size() <= 1:
-        return RandomSampler(dataset)
-    return DistributedSampler(dataset, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
+        return SequentialSampler(dataset)
+    return DistributedSampler(dataset, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal(), shuffle=False)
 
 
 def nested_new_like(arrays, num_samples):
