@@ -64,9 +64,12 @@ class TextDataset(Dataset):
                 with open(file_path, encoding="utf-8") as f:
                     text = f.read()
 
-                tokenized_text = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))
+                # tokenized_text = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))
+                import re
+                tokenized_text =[int(token) for token in re.split(' |\n', text.strip())]
 
-                for i in range(0, len(tokenized_text) - block_size + 1, block_size):  # Truncate in block of block_size
+                from tqdm import tqdm
+                for i in tqdm(range(0, len(tokenized_text) - block_size + 1, block_size)):  # Truncate in block of block_size
                     self.examples.append(
                         tokenizer.build_inputs_with_special_tokens(tokenized_text[i : i + block_size])
                     )
