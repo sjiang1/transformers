@@ -15,6 +15,26 @@
 """
 The Trainer class, to easily train a 🤗 Transformers from scratch or finetune it on a new task.
 """
+from torch.nn.utils.rnn import pad_sequence
+def get_padded_tensor(a, b):
+    if a is None or b is None:
+        return a, b
+    a_longer_than_b = a.shape[1] > b.shape[1]
+    if(a_longer_than_b):
+        longer = a
+        shorter = b
+    else:
+        longer = b
+        shorter = a
+    shorter_list = torch.split(shorter, 1, 0)
+    shorter_list = [torch.squeeze(e, dim=0) for e in shorter_list]
+    shorter_list.append(longer[0])
+    padded_shorter = pad_sequence(shorter_list, batch_first=True, padding_value=1)
+    padded_shorter = padded_shorter[0:-1]
+    if(a_longer_than_b):
+        return a, padded_shorter
+    else:
+        return padded_shorter, b
 
 import collections
 import inspect
@@ -1395,8 +1415,10 @@ class Trainer:
                 losses = loss.repeat(batch_size)
                 losses_host = losses if losses_host is None else torch.cat((losses_host, losses), dim=0)
             if logits is not None:
+                preds_host, logits = get_padded_tensor(preds_host, logits) 
                 preds_host = logits if preds_host is None else nested_concat(preds_host, logits, dim=0)
             if labels is not None:
+                labels_host, labels = get_padded_tensor(labels_host, labels) 
                 labels_host = labels if labels_host is None else nested_concat(labels_host, labels, dim=0)
             self.control = self.callback_handler.on_prediction_step(self.args, self.state, self.control)
 
